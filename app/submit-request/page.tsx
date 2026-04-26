@@ -56,6 +56,13 @@ function SubmitRequestForm() {
         }
     }
 
+    function isValidPhone(value: string) {
+      const normalized = value.replace(/[^\d+]/g, "");
+      const digits = normalized.replace(/\D/g, "");
+
+      return digits.length >= 9 && digits.length <= 15;
+    }
+
     function validateForm(): { errors: FieldErrors; firstErrorField: keyof FieldErrors | null } {
       const errors: FieldErrors = {};
 
@@ -65,6 +72,8 @@ function SubmitRequestForm() {
 
       if (!formData.phone.trim()) {
         errors.phone = "Вкажіть телефон.";
+      } else if (!isValidPhone(formData.phone)) {
+        errors.phone = "Вкажіть коректний номер телефону.";
       }
 
       if (!formData.serviceGroup) {
@@ -277,8 +286,13 @@ function SubmitRequestForm() {
               <input
                 type="tel"
                 value={formData.phone}
-                onChange={(event) => updateField("phone", event.target.value)}
-                placeholder="+421..."
+                onChange={(event) =>
+                  updateField(
+                    "phone",
+                    event.target.value.replace(/[^\d+\-\s()]/g, "")
+                  )
+                }
+                placeholder="+421... або +380..."
                 required
                 className={`w-full rounded-2xl border px-4 py-3 outline-none transition focus:border-zinc-400 ${
                   fieldErrors.phone ? "border-red-400" : "border-zinc-200"
