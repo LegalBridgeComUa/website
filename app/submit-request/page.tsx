@@ -1,19 +1,46 @@
 "use client";
 
-import { useState } from "react";
-import { services } from "@/lib/services";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+
+import { getActiveServices, getServiceById } from "@/lib/service-content";
+import { resolveServiceId } from "@/lib/service-resolver";
 import type { OrderPayload } from "@/lib/order";
-export default function SubmitRequestPage() {
+
+interface FieldErrors {
+  customerName?: string;
+  phone?: string;
+  serviceGroup?: string;
+  subjectFullName?: string;
+  files?: string;
+}
+
+function SubmitRequestForm() {
+    const searchParams = useSearchParams();
+    const selectedService = searchParams.get("service") ?? "";
     const [formData, setFormData] = useState<OrderPayload>({
-        customerName: "",
-        phone: "",
-        serviceId: "",
-        subjectFullName: "",
-        note: "",
-        source: "website_form",
+      customerName: "",
+      phone: "",
+      serviceGroup: selectedService,
+      serviceId: "",
+      subjectFullName: "",
+      note: "",
+      intakeDetails: "",
+      urgency: "urgent",
+      apostille: "yes",
+      translation: "none",
+      extractType: "full",
+      civilRegistryType: "duplicate",
+      educationType: "standard",
+      translationType: "clearance_sk",
+      purposeCode: "Подання до установ іноземних держав",
+      source: "website_form",
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
     function updateField<K extends keyof OrderPayload>(
         field: K,
@@ -23,19 +50,187 @@ export default function SubmitRequestPage() {
             ...prev,
             [field]: value,
         }));
+        // Clear error when user starts typing
+        if (fieldErrors[field as keyof FieldErrors]) {
+            setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
+        }
+    }
+
+    function validateForm(): { errors: FieldErrors; firstErrorField: keyof FieldErrors | null } {
+      const errors: FieldErrors = {};
+
+      if (!formData.customerName.trim()) {
+        errors.customerName = "Вкажіть ім’я.";
+      }
+
+      if (!formData.phone.trim()) {
+        errors.phone = "Вкажіть телефон.";
+      }
+
+      if (!formData.serviceGroup) {
+        errors.serviceGroup = "Оберіть послугу.";
+      }
+
+      if (!formData.subjectFullName.trim()) {
+        errors.subjectFullName = "Вкажіть прізвище та ім’я особи, для якої оформлюється документ.";
+      }
+
+      if (selectedFiles.length === 0) {
+        errors.files = "Додайте хоча б один файл або фото документа.";
+      }
+
+      setFieldErrors(errors);
+
+      // Find first error field for scrolling
+      const errorFields: (keyof FieldErrors)[] = ["customerName", "phone", "serviceGroup", "subjectFullName", "files"];
+      const firstErrorField = errorFields.find((field) => errors[field]) ?? null;
+
+      return { errors, firstErrorField };
+    }
+
+    function prepareOrderPayload() {
+      const resolvedServiceId = resolveServiceId(formData);
+      return {
+        ...formData,
+        serviceId: resolvedServiceId,
+        filesCount: selectedFiles.length,
+      };
     }
 
     function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-        event.preventDefault();
+      event.preventDefault();
 
-        setIsSubmitting(true);
+      const { firstErrorField } = validateForm();
 
-        console.log("Order payload:", formData);
+      if (!firstErrorField) {
+        // Form is valid, proceed with submission
+        submitForm();
+        return;
+      }
 
-        setTimeout(() => {
-            setIsSubmitting(false);
-            alert("Заявку підготовлено. Наступний крок — підключення Supabase.");
-        }, 600);
+      // Scroll to first error field
+      const errorElement = document.querySelector(`[data-error-field="${firstErrorField}"]`);
+      if (errorElement) {
+        errorElement.scrollIntoView({ behavior: "smooth", block: "center" });
+        // Focus if it's an input element
+        const input = errorElement.querySelector("input, select, textarea");
+        if (input instanceof HTMLElement) {
+          input.focus();
+        }
+      }
+    }
+
+    function submitForm() {
+      setIsSubmitting(true);
+
+      const payload = prepareOrderPayload();
+
+      if (!payload.serviceId) {
+        setIsSubmitting(false);
+        setFieldErrors((prev) => ({
+          ...prev,
+          serviceGroup: "Не вдалося визначити тип послуги. Перевірте параметри.",
+        }));
+        return;
+      }
+
+      console.info("Order prepared", {
+        source: payload.source,
+        serviceGroup: payload.serviceGroup,
+        serviceId: payload.serviceId,
+        filesCount: payload.filesCount,
+      });
+
+      setTimeout(() => {
+        setIsSubmitting(false);
+        setIsSuccess(true);
+      }, 600);
+    }
+
+    const selectedServiceContent = formData.serviceGroup
+      ? getServiceById(formData.serviceGroup)
+      : null;
+
+    function handleFilesChange(event: React.ChangeEvent<HTMLInputElement>) {
+      const files = Array.from(event.target.files ?? []);
+
+      setSelectedFiles((prev) => [...prev, ...files]);
+
+      // Clear files error when user adds files
+      if (fieldErrors.files) {
+        setFieldErrors((prev) => ({ ...prev, files: undefined }));
+      }
+
+      event.target.value = "";
+    }
+
+    function removeFile(fileName: string) {
+      setSelectedFiles((prev) => prev.filter((file) => file.name !== fileName));
+    }
+
+    // ...existing code...
+
+    function getIntakeDetailsPlaceholder() {
+      if (formData.serviceGroup === "ua_clearance") {
+        return "Наприклад: попередні прізвища, особливі вимоги установи";
+      }
+
+      if (formData.serviceGroup === "pl_clearance") {
+        return "Наприклад: прізвище при народженні, місце народження, адреса проживання, ім’я батька, ім’я матері, дівоче прізвище матері";
+      }
+
+      if (formData.serviceGroup === "hu_clearance") {
+        return "Наприклад: прізвище при народженні, місце народження, адреса проживання, ім’я матері, дівоче прізвище матері";
+      }
+
+      if (formData.serviceGroup === "cz_clearance") {
+        return "Наприклад: прізвище при народженні, місце народження, адреса проживання, додаткові дані зі свідоцтва про народження";
+      }
+
+      if (formData.serviceGroup === "driver_registry") {
+        return "Наприклад: особливі вимоги установи";
+      }
+
+      if (formData.serviceGroup === "civil_registry") {
+        return "Наприклад: особливі вимоги установи";
+      }
+
+      if (formData.serviceGroup === "education_apostille") {
+        return "Наприклад: особливі вимоги установи";
+      }
+
+      if (formData.serviceGroup === "translation") {
+        return "Наприклад: мова перекладу, країна подання, бажана транслітерація ПІБ, особливі вимоги установи";
+      }
+
+      return "Наприклад: країна подання, мета отримання документа або інші важливі дані";
+    }
+
+    if (isSuccess) {
+      return (
+        <main className="min-h-screen bg-[#f7f3ec] px-6 py-16 text-zinc-900 md:px-10 lg:px-16">
+          <div className="mx-auto max-w-2xl rounded-3xl bg-white p-8 text-center shadow-sm">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9b6a24]">
+              Заявку отримано
+            </p>
+
+            <h1 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
+              Дякуємо! Ми зв’яжемося з вами найближчим часом.
+            </h1>
+
+            <p className="mt-6 text-zinc-600">
+              Ми перевіримо деталі заявки, документи та підкажемо наступні кроки.
+            </p>
+
+            <a
+              href="/"
+              className="mt-8 inline-flex rounded-full bg-zinc-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800"
+            >
+              На головну
+            </a>
+          </div>
+        </main>
+      );
     }
 
   return (
@@ -55,10 +250,11 @@ export default function SubmitRequestPage() {
         </p>
 
         <form
-            onSubmit={handleSubmit}
-            className="mt-12 space-y-6 rounded-3xl bg-white p-6 shadow-sm md:p-8"
+          noValidate
+          onSubmit={handleSubmit}
+          className="mt-12 space-y-6 rounded-3xl bg-white p-6 shadow-sm md:p-8"
         >
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-2" data-error-field="customerName">
             <div>
               <label className="mb-2 block text-sm font-medium">Ім’я</label>
               <input
@@ -67,11 +263,16 @@ export default function SubmitRequestPage() {
                 onChange={(event) => updateField("customerName", event.target.value)}
                 placeholder="Ваше ім’я"
                 required
-                className="w-full rounded-2xl border border-zinc-200 px-4 py-3 outline-none transition focus:border-zinc-400"
-                />
+                className={`w-full rounded-2xl border px-4 py-3 outline-none transition focus:border-zinc-400 ${
+                  fieldErrors.customerName ? "border-red-400" : "border-zinc-200"
+                }`}
+              />
+              {fieldErrors.customerName && (
+                <p className="mt-1 text-sm text-red-600">{fieldErrors.customerName}</p>
+              )}
             </div>
 
-            <div>
+            <div data-error-field="phone">
               <label className="mb-2 block text-sm font-medium">Телефон</label>
               <input
                 type="tel"
@@ -79,62 +280,478 @@ export default function SubmitRequestPage() {
                 onChange={(event) => updateField("phone", event.target.value)}
                 placeholder="+421..."
                 required
-                className="w-full rounded-2xl border border-zinc-200 px-4 py-3 outline-none transition focus:border-zinc-400"
-                />
+                className={`w-full rounded-2xl border px-4 py-3 outline-none transition focus:border-zinc-400 ${
+                  fieldErrors.phone ? "border-red-400" : "border-zinc-200"
+                }`}
+              />
+              {fieldErrors.phone && (
+                <p className="mt-1 text-sm text-red-600">{fieldErrors.phone}</p>
+              )}
             </div>
           </div>
 
-          <div>
+          <div data-error-field="serviceGroup">
             <label className="mb-2 block text-sm font-medium">Послуга</label>
+
             <select
-                value={formData.serviceId}
-                required
-                onChange={(event) => updateField("serviceId", event.target.value)}
-                className="w-full rounded-2xl border border-zinc-200 px-4 py-3 outline-none transition focus:border-zinc-400"
-                >
-                <option value="">Оберіть послугу</option>
-                {services.map((service) => (
-                    <option key={service.id} value={service.id}>
-                    {service.title}
-                    </option>
-                ))}
-                </select>
+              value={formData.serviceGroup}
+              required
+              onChange={(event) => {
+                const value = event.target.value;
+
+                updateField("serviceGroup", value);
+
+                if (value === "driver_registry") {
+                  setFormData((prev) => ({
+                    ...prev,
+                    serviceGroup: value,
+                    apostille: "no",
+                    translation: "none",
+                  }));
+                }
+              }}
+              className={`w-full rounded-2xl border px-4 py-3 outline-none transition focus:border-zinc-400 ${
+                fieldErrors.serviceGroup ? "border-red-400" : "border-zinc-200"
+              }`}
+            >
+              <option value="">Оберіть послугу</option>
+              {getActiveServices().map((service) => (
+                <option key={service.contentId} value={service.contentId}>
+                  {service.title}
+                </option>
+              ))}
+            </select>
+            {fieldErrors.serviceGroup && (
+              <p className="mt-1 text-sm text-red-600">{fieldErrors.serviceGroup}</p>
+            )}
+
+            {selectedServiceContent && (
+              <div className="mt-4 rounded-2xl bg-[#f7f3ec] p-4">
+                <p className="text-sm font-medium text-zinc-900">
+                  {selectedServiceContent.shortDescription}
+                </p>
+
+                <div className="mt-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#9b6a24]">
+                    Що підготувати
+                  </p>
+
+                  <ul className="mt-3 space-y-2">
+                    {selectedServiceContent.requiredDocuments
+                      .slice(0, 5)
+                      .map((item, index) => (
+                        <li
+                          key={index}
+                          className="flex items-start gap-2 text-sm text-zinc-600"
+                        >
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#d6a75c]" />
+                          <span className="whitespace-pre-line">{item}</span>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+
+                <p className="mt-4 text-sm text-zinc-500">
+                  Орієнтовний строк: {selectedServiceContent.turnaroundText}
+                </p>
+              </div>
+            )}
           </div>
 
-          <div>
+          {formData.serviceGroup === "ua_clearance" && (
+            <div className="space-y-6 rounded-3xl border border-[#d6a75c]/30 bg-[#f7f3ec] p-5">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[#9b6a24]">
+                  Уточнення для довідки про несудимість
+                </p>
+                <p className="mt-2 text-sm text-zinc-600">
+                  Оберіть параметри — система сформує конкретний тип послуги для заявки.
+                </p>
+              </div>
+
+              <div className="grid gap-5 md:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-medium">Терміновість</label>
+                  <select
+                    value={formData.urgency ?? "normal"}
+                    onChange={(event) =>
+                      updateField("urgency", event.target.value as "normal" | "urgent")
+                    }
+                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                  >
+                    <option value="normal">Стандартна</option>
+                    <option value="urgent">Термінова</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium">Апостиль</label>
+                  <select
+                    value={formData.apostille ?? "yes"}
+                    onChange={(event) =>
+                      updateField("apostille", event.target.value as "yes" | "no")
+                    }
+                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                  >
+                    <option value="no">Без апостиля</option>
+                    <option value="yes">З апостилем</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium">Переклад</label>
+                  <select
+                    value={formData.translation ?? "none"}
+                    onChange={(event) =>
+                      updateField(
+                        "translation",
+                        event.target.value as "none" | "sk" | "cz"
+                      )
+                    }
+                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                  >
+                    <option value="none">Без перекладу</option>
+                    <option value="sk">Переклад словацькою</option>
+                    <option value="cz">Переклад чеською</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium">Тип витягу</label>
+                  <select
+                    value={formData.extractType ?? "full"}
+                    onChange={(event) =>
+                      updateField("extractType", event.target.value as "full" | "short")
+                    }
+                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                  >
+                    <option value="full">Повний витяг</option>
+                    <option value="short">Скорочений витяг</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium">Мета отримання</label>
+                <select
+                  value={formData.purposeCode ?? "Подання до установ іноземних держав"}
+                  onChange={(event) => updateField("purposeCode", event.target.value)}
+                  className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                >
+                  <option value="Подання до установ іноземних держав">
+                    Подання до установ іноземних держав
+                  </option>
+                  <option value="Оформлення візи для виїзду за кордон">
+                    Оформлення візи для виїзду за кордон
+                  </option>
+                  <option value="Оформлення на роботу">Оформлення на роботу</option>
+                  <option value="Оформлення набуття громадянства">
+                    Оформлення набуття громадянства
+                  </option>
+                  <option value="Усиновлення / опіка / прийомна сім’я">
+                    Усиновлення / опіка / прийомна сім’я
+                  </option>
+                  <option value="Публічна закупівля / тендер">
+                    Публічна закупівля / тендер
+                  </option>
+                  <option value="Оформлення дозволу на зброю">
+                    Оформлення дозволу на зброю
+                  </option>
+                  <option value="Ліцензія / діяльність з наркотичними речовинами">
+                    Ліцензія / діяльність з наркотичними речовинами
+                  </option>
+                  <option value="Подання до ТЦК та СП">Подання до ТЦК та СП</option>
+                  <option value="Пред’явлення за місцем вимоги">
+                    Пред’явлення за місцем вимоги
+                  </option>
+                </select>
+              </div>
+
+              <p className="text-xs leading-5 text-zinc-500">
+                За замовчуванням використовується повний витяг і мета “Подання до установ
+                іноземних держав”. Якщо установа має інші вимоги — змініть параметри.
+              </p>
+            </div>
+          )}
+
+          <div data-error-field="subjectFullName">
             <label className="mb-2 block text-sm font-medium">
-              ПІБ (для документа)
+              Прізвище та ім’я (для документа)
             </label>
             <input
                 type="text"
                 required
                 value={formData.subjectFullName}
                 onChange={(event) => updateField("subjectFullName", event.target.value)}
-                placeholder="Повне ім’я особи"
-                className="w-full rounded-2xl border border-zinc-200 px-4 py-3 outline-none transition focus:border-zinc-400"
+                placeholder="Прізвище та ім’я особи"
+                className={`w-full rounded-2xl border px-4 py-3 outline-none transition focus:border-zinc-400 ${
+                  fieldErrors.subjectFullName ? "border-red-400" : "border-zinc-200"
+                }`}
                 />
+            {fieldErrors.subjectFullName && (
+                <p className="mt-1 text-sm text-red-600">{fieldErrors.subjectFullName}</p>
+            )}
           </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium">Коментар</label>
-            <textarea
-                rows={5}
-                value={formData.note ?? ""}
-                onChange={(event) => updateField("note", event.target.value)}
-                placeholder="Опишіть коротко вашу ситуацію"
-                className="w-full rounded-2xl border border-zinc-200 px-4 py-3 outline-none transition focus:border-zinc-400"
-                />
-          </div>
+          {["pl_clearance", "hu_clearance", "cz_clearance"].includes(formData.serviceGroup) && (
+            <div className="space-y-4 rounded-3xl border border-[#d6a75c]/30 bg-[#f7f3ec] p-5">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[#9b6a24]">
+                  Параметри оформлення
+                </p>
+                <p className="mt-2 text-sm text-zinc-600">
+                  Оберіть параметри оформлення та нижче вкажіть додаткові дані для формування запиту.
+                </p>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium">Апостиль</label>
+                <select
+                  value={formData.apostille ?? "no"}
+                  onChange={(event) =>
+                    updateField("apostille", event.target.value as "yes" | "no")
+                  }
+                  className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                >
+                  <option value="no">Без апостиля</option>
+                  <option value="yes">З апостилем</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {formData.serviceGroup === "driver_registry" && (
+            <div className="space-y-4 rounded-3xl border border-[#d6a75c]/30 bg-[#f7f3ec] p-5">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[#9b6a24]">
+                  Параметри оформлення
+                </p>
+                <p className="mt-2 text-sm text-zinc-600">
+                  Оберіть, чи потрібен апостиль та переклад для подання документа за кордоном.
+                </p>
+              </div>
+
+              <div className="grid gap-5 md:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-medium">Апостиль</label>
+                  <select
+                    value={formData.apostille ?? "no"}
+                    onChange={(event) =>
+                      updateField("apostille", event.target.value as "yes" | "no")
+                    }
+                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                  >
+                    <option value="no">Без апостиля</option>
+                    <option value="yes">З апостилем</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium">Переклад</label>
+                  <select
+                    value={formData.translation ?? "none"}
+                    onChange={(event) =>
+                      updateField("translation", event.target.value as "none" | "sk")
+                    }
+                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                  >
+                    <option value="none">Без перекладу</option>
+                    <option value="sk">Переклад словацькою</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {formData.serviceGroup === "civil_registry" && (
+            <div className="space-y-4 rounded-3xl border border-[#d6a75c]/30 bg-[#f7f3ec] p-5">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[#9b6a24]">
+                  Параметри оформлення
+                </p>
+                <p className="mt-2 text-sm text-zinc-600">
+                  Оберіть, який документ РАЦС потрібно оформити та чи потрібні апостиль і
+                  переклад.
+                </p>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium">Тип документа</label>
+                <select
+                  value={formData.civilRegistryType ?? "duplicate"}
+                  onChange={(event) =>
+                    updateField(
+                      "civilRegistryType",
+                      event.target.value as "duplicate" | "extract" | "apostille_only"
+                    )
+                  }
+                  className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                >
+                  <option value="duplicate">Дублікат свідоцтва</option>
+                  <option value="extract">Витяг з ДРАЦС</option>
+                  <option value="apostille_only">Апостиль на ваше свідоцтво</option>
+                </select>
+              </div>
+
+              {formData.civilRegistryType !== "apostille_only" && (
+                <div>
+                  <label className="mb-2 block text-sm font-medium">Апостиль</label>
+                  <select
+                    value={formData.apostille ?? "yes"}
+                    onChange={(event) =>
+                      updateField("apostille", event.target.value as "yes" | "no")
+                    }
+                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                  >
+                    <option value="yes">З апостилем</option>
+                    <option value="no">Без апостиля</option>
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label className="mb-2 block text-sm font-medium">Переклад</label>
+                <select
+                  value={formData.translation ?? "none"}
+                  onChange={(event) =>
+                    updateField("translation", event.target.value as "none" | "sk")
+                  }
+                  className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                >
+                  <option value="none">Без перекладу</option>
+                  <option value="sk">Переклад словацькою</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {formData.serviceGroup === "education_apostille" && (
+            <div className="space-y-4 rounded-3xl border border-[#d6a75c]/30 bg-[#f7f3ec] p-5">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[#9b6a24]">
+                  Параметри оформлення
+                </p>
+                <p className="mt-2 text-sm text-zinc-600">
+                  Оберіть тип оформлення освітнього документа.
+                </p>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium">Тип послуги</label>
+                <select
+                  value={formData.educationType ?? "standard"}
+                  onChange={(event) =>
+                    updateField(
+                      "educationType",
+                      event.target.value as
+                        | "standard"
+                        | "urgent"
+                        | "institution_certificate"
+                    )
+                  }
+                  className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                >
+                  <option value="standard">Апостиль освітнього документа — стандартно</option>
+                  <option value="urgent">Апостиль освітнього документа — терміново</option>
+                  <option value="institution_certificate">
+                    Апостиль довідки з навчального закладу
+                  </option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {formData.serviceGroup === "translation" && (
+            <div className="space-y-4 rounded-3xl border border-[#d6a75c]/30 bg-[#f7f3ec] p-5">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[#9b6a24]">
+                  Параметри перекладу
+                </p>
+                <p className="mt-2 text-sm text-zinc-600">
+                  Оберіть тип документа та мову перекладу.
+                </p>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium">Тип перекладу</label>
+                <select
+                  value={formData.translationType ?? "clearance_sk"}
+                  onChange={(event) =>
+                    updateField(
+                      "translationType",
+                      event.target.value as
+                        | "clearance_sk"
+                        | "certificate_sk"
+                        | "clearance_cz"
+                    )
+                  }
+                  className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                >
+                  <option value="clearance_sk">Переклад довідки словацькою</option>
+                  <option value="certificate_sk">Переклад свідоцтва словацькою</option>
+                  <option value="clearance_cz">Переклад довідки чеською</option>
+                </select>
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="mb-2 block text-sm font-medium">
+              Додаткова інформація
+            </label>
+            <textarea
+              rows={5}
+              value={formData.intakeDetails ?? ""}
+              onChange={(event) => updateField("intakeDetails", event.target.value)}
+              placeholder={getIntakeDetailsPlaceholder()}
+              className="w-full rounded-2xl border border-zinc-200 px-4 py-3 outline-none transition focus:border-zinc-400"
+            />
+            <p className="mt-2 text-xs leading-5 text-zinc-500">
+              Це поле допомагає нам швидше перевірити заявку та зрозуміти вашу ситуацію.
+            </p>
+          </div>
+
+          <div data-error-field="files">
+            <label className="mb-2 block text-sm font-medium">
               Завантажити документи
             </label>
+
             <input
               type="file"
-              required
+              multiple
+              onChange={handleFilesChange}
               className="w-full rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-4 py-6 text-sm"
             />
+            {fieldErrors.files && (
+              <p className="mt-1 text-sm text-red-600">{fieldErrors.files}</p>
+            )}
+
+            {selectedFiles.length > 0 && (
+              <div className="mt-4 rounded-2xl bg-[#f7f3ec] p-4">
+                <p className="text-sm font-medium text-zinc-900">
+                  Обрано файлів: {selectedFiles.length}
+                </p>
+
+                <ul className="mt-3 space-y-2">
+                  {selectedFiles.map((file) => (
+                    <li
+                      key={`${file.name}-${file.lastModified}`}
+                      className="flex items-center justify-between gap-3 text-sm text-zinc-600"
+                    >
+                      <span className="truncate">{file.name}</span>
+
+                      <button
+                        type="button"
+                        onClick={() => removeFile(file.name)}
+                        className="shrink-0 text-xs font-medium text-[#9b6a24] hover:underline"
+                      >
+                        Видалити
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
             <button
@@ -147,5 +764,13 @@ export default function SubmitRequestPage() {
         </form>
       </div>
     </main>
+  );
+}
+
+export default function SubmitRequestPage() {
+  return (
+    <Suspense fallback={null}>
+      <SubmitRequestForm />
+    </Suspense>
   );
 }

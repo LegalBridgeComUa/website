@@ -193,3 +193,99 @@ Avoid:
 The goal is not to generate pages quickly.
 
 The goal is to build a reusable legal-tech product foundation.
+
+## Security / Privacy Rules
+
+This product handles sensitive personal and legal data.
+
+Treat all personal data, uploaded files, and document-related information as sensitive by default.
+
+This is not a generic SaaS CRUD application.
+
+LegalBridge processes:
+- passports
+- tax IDs
+- birth certificates
+- marriage certificates
+- criminal record certificates
+- education documents
+- legal and administrative records
+- potentially sensitive legal matters
+
+All engineering decisions must treat user data as sensitive.
+
+### Sensitive Data Rules
+
+Do not expose sensitive personal data unless strictly necessary for the user flow.
+
+Do not log:
+- passport details
+- tax IDs
+- birth data
+- document identifiers
+- raw uploaded file metadata
+- sensitive legal case details
+
+Do not print sensitive client payloads in:
+- browser console
+- server logs
+- debug output
+- error messages
+
+Never use sensitive real client data in:
+- test fixtures
+- mock files
+- examples
+- hardcoded development data
+
+Use fake / synthetic examples only.
+
+### File Handling Rules
+
+Uploaded files must be treated as sensitive documents.
+
+Do not assume uploaded files are safe to expose publicly.
+
+Do not expose direct file URLs in frontend code unless explicitly intended.
+
+File handling must be designed for:
+- restricted access
+- controlled visibility
+- future signed URLs
+- future role-based access
+
+Files should always be treated as protected assets.
+
+### Frontend Rules
+
+Do not keep sensitive personal data in frontend state longer than necessary.
+
+Do not over-store sensitive data in client-side memory.
+
+Avoid exposing sensitive payloads through:
+- localStorage
+- query params
+- URL state
+- browser logs
+
+Keep frontend data exposure minimal.
+
+### Access Rules
+
+Design with future access control in mind.
+
+The system will later require:
+- role-based access
+- operator visibility restrictions
+- auditability
+- action traceability
+
+Do not design data flows as if every operator should see everything.
+
+### Privacy Principle
+
+Collect only the minimum data required for the task.
+
+Do not request, store, or expose extra sensitive data unless operationally necessary.
+
+Minimize data surface wherever possible.

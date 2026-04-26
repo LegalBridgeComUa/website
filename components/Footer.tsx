@@ -36,7 +36,7 @@ export default function Footer() {
             Навігація
           </h3>
           <div className="mt-4 space-y-2 text-sm text-zinc-700">
-            <a href="/#services" className="block hover:text-[#9b6a24]">
+            <a href="/services" className="block hover:text-[#9b6a24]">
               Послуги
             </a>
             <a href="/#about" className="block hover:text-[#9b6a24]">

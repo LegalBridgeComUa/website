@@ -19,7 +19,7 @@ export default function Header() {
                 </a>
 
                 <nav className="hidden items-center gap-8 text-sm font-medium md:flex">
-                <a href="/#services" className="transition hover:text-[#9b6a24]">
+                <a href="/services" className="transition hover:text-[#9b6a24]">
                     Послуги
                 </a>
                 <a href="/#process" className="transition hover:text-[#9b6a24]">
@@ -50,7 +50,7 @@ export default function Header() {
             {isOpen && (
                 <div className="border-t border-black/5 px-6 py-4 md:hidden">
                     <nav className="flex flex-col gap-4 text-sm font-medium">
-                    <a href="/#services" onClick={() => setIsOpen(false)}>
+                    <a href="/services" onClick={() => setIsOpen(false)}>
                         Послуги
                     </a>
                     <a href="/#process" onClick={() => setIsOpen(false)}>

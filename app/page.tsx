@@ -1,4 +1,5 @@
-import { services } from "@/lib/services";
+import { getActiveServices } from "@/lib/service-content";
+import { getIcon } from "@/lib/icons";
 
 const steps = [
   "Залишаєте заявку",
@@ -90,21 +91,29 @@ export default function Home() {
         </div>
 
         <div className="mt-10 flex snap-x gap-4 overflow-x-auto pb-4 md:grid md:grid-cols-3 md:overflow-visible">
-          {services.map((service) => (
-            <div
-              key={service.title}
-              className="min-w-[260px] snap-start rounded-3xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
-            >
-              <div className="mb-8 h-1 w-12 rounded-full bg-[#d6a75c]" />
-              <h3 className="text-xl font-semibold">{service.title}</h3>
-              <p className="mt-4 text-sm leading-6 text-zinc-600">
-                {service.text}
-              </p>
-              <a className="mt-6 inline-flex text-sm font-semibold text-[#9b6a24]">
-                Детальніше →
-              </a>
-            </div>
-          ))}
+          {getActiveServices().map((service) => {
+            const Icon = getIcon(service.icon);
+            return (
+              <div
+                key={service.contentId}
+                className="min-w-[260px] snap-start rounded-3xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+              >
+                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f7f3ec]">
+                  <Icon className="h-6 w-6 text-[#9b6a24]" />
+                </div>
+                <h3 className="text-xl font-semibold">{service.title}</h3>
+                <p className="mt-4 text-sm leading-6 text-zinc-600">
+                  {service.shortDescription}
+                </p>
+                <a
+                  href={`/services/${service.contentId}`}
+                  className="mt-6 inline-flex text-sm font-semibold text-[#9b6a24]"
+                >
+                  Детальніше →
+                </a>
+              </div>
+            );
+          })}
         </div>
       </section>
 

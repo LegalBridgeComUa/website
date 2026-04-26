@@ -1,38 +1,18 @@
-export const services = [
-  {
-    id: "ua_clearance",
-    title: "Довідки про несудимість",
-    description:
-      "Витребування українських, польських, угорських та чеських довідок про несудимість з апостилем або без.",
-  },
-  {
-    id: "apostille",
-    title: "Апостиль документів",
-    description:
-      "Апостиль свідоцтв, освітніх документів, довідок та інших документів для використання за кордоном.",
-  },
-  {
-    id: "civil_registry",
-    title: "Документи РАЦС",
-    description:
-      "Дублікати свідоцтв, витяги з ДРАЦС, апостиль та супровід документів цивільного стану.",
-  },
-  {
-    id: "education",
-    title: "Освітні документи",
-    description:
-      "Апостиль дипломів, додатків, атестатів та довідок з навчальних закладів.",
-  },
-  {
-    id: "driver_registry",
-    title: "Водійські документи",
-    description:
-      "Підтвердження факту видачі посвідчення водія та супровід документів ТСЦ МВС.",
-  },
-  {
-    id: "translation",
-    title: "Переклади SK / CZ",
-    description:
-      "Сертифіковані переклади на словацьку та чеську мови для подальшого використання документів за кордоном.",
-  },
-];
+/**
+ * @deprecated Use lib/service-content.ts instead
+ * This file is kept for backward compatibility
+ */
+import { serviceContent } from "./service-content";
+
+interface LegacyService {
+  id: string;
+  title: string;
+  text: string;
+}
+
+// Re-export in legacy shape for backward compatibility
+export const services: LegacyService[] = serviceContent.map((s) => ({
+  id: s.contentId,
+  title: s.title,
+  text: s.shortDescription,
+}));
