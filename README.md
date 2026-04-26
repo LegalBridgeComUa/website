@@ -1,36 +1,259 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LegalBridge Website
 
-## Getting Started
+LegalBridge is a service platform for Ukrainians living abroad who need legal, documentary, and administrative support in Ukraine.
 
-First, run the development server:
+The website is the public digital layer of the LegalBridge operational system.
 
-```bash
+It is not only a marketing website.
+
+It is designed as the first layer of a larger product that will later include:
+- structured website intake
+- Telegram bot
+- Viber bot
+- Supabase backend
+- Google Sheets operational view
+- document upload and processing
+- SmartDoc module
+
+---
+
+## Product Positioning
+
+LegalBridge helps Ukrainians abroad solve legal and documentary issues in Ukraine remotely.
+
+Core positioning:
+
+Ви за кордоном — ми діємо в Україні.
+
+The service acts as a bridge between Ukrainians abroad and Ukrainian institutions.
+
+---
+
+## Current Tech Stack
+
+- Next.js
+- TypeScript
+- Tailwind CSS
+- Vercel
+- GitHub
+
+Planned:
+- Supabase
+- Google Sheets sync
+- Telegram bot
+- Viber bot
+- SmartDoc document processing
+
+---
+
+## Project Structure
+
+Current structure:
+
+- src/app = Next.js routes
+- src/components = reusable UI components
+- src/lib = shared content, types, schemas and business logic
+- public = static assets
+
+Important project guidance files:
+
+- PROJECT_CONTEXT.md
+- ENGINEERING_RULES.md
+- CONTENT_MODEL.md
+- DATA_MODEL.md
+- README.md
+
+---
+
+## Current Pages
+
+### Homepage
+
+Route:
+
+/
+
+Purpose:
+- explain positioning
+- show trust
+- present service areas
+- lead user to submit request
+
+### Submit Request Page
+
+Route:
+
+/submit-request
+
+Purpose:
+- collect structured client request
+- prepare shared order payload
+- later submit to backend / Supabase / CRM
+
+---
+
+## Current Components
+
+Reusable components:
+
+- Header
+- Footer
+
+These should remain shared layout components and must not be duplicated inside pages.
+
+---
+
+## Current Shared Models
+
+### OrderPayload
+
+Located in:
+
+src/lib/order.ts
+
+Purpose:
+Shared intake payload for website, bots and future API.
+
+Expected fields:
+- customerName
+- phone
+- serviceId
+- subjectFullName
+- note
+- source
+
+Source values include:
+- website_form
+- telegram_bot
+- viber_bot
+- website_manual
+- telegram_manual
+- viber_manual
+- whatsapp_manual
+- instagram_manual
+
+---
+
+## Service Content
+
+Service content must not be hardcoded directly inside page components.
+
+Temporary local source:
+
+src/lib/services.ts
+
+Future target:
+
+Supabase service_content table
+
+Service content is intended to be reused across:
+- homepage
+- services pages
+- submit form
+- Telegram bot
+- Viber bot
+- SEO pages
+
+---
+
+## Development Commands
+
+Install dependencies:
+
+npm install
+
+Run local development server:
+
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Build project:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+npm run build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Run lint:
 
-## Learn More
+npm run lint
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Local Development
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Default local URL:
 
-## Deploy on Vercel
+http://localhost:3000
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Submit request page:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+http://localhost:3000/submit-request
+
+---
+
+## Design Direction
+
+Style:
+- premium minimal
+- legal-tech
+- calm
+- trustworthy
+- mobile-first
+- warm neutral color palette
+
+Brand tone:
+- professional
+- clear
+- reliable
+- human
+- not overly corporate
+
+---
+
+## Current Architecture
+
+Current phase:
+
+Website
+   ↓
+Shared local models / content
+   ↓
+Manual Google Sheets CRM
+
+Next phase:
+
+Website / Bots
+       ↓
+    Supabase
+       ↓
+Google Sheets operational view
+
+---
+
+## Development Principles
+
+Do not hardcode business logic inside UI components.
+
+Do not duplicate service content across pages.
+
+Do not build website-only order logic.
+
+All intake flows must eventually map to shared order logic.
+
+Build toward:
+- shared schemas
+- reusable content
+- Supabase compatibility
+- bot compatibility
+
+---
+
+## Next Planned Development Steps
+
+1. Refactor service content into richer structured model
+2. Build services overview page
+3. Build service detail pages
+4. Improve submit request form
+5. Add file upload UI
+6. Prepare Supabase schema
+7. Connect website form to backend
+8. Add Google Sheets sync
+9. Prepare bot-compatible order intake
+10. Add SmartDoc processing module
