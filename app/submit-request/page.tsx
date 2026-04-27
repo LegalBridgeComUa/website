@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { getActiveServices, getServiceById } from "@/lib/service-content";
@@ -39,8 +39,10 @@ function SubmitRequestForm() {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [submittedOrderId, setSubmittedOrderId] = useState("");
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+    const successRef = useRef<HTMLDivElement | null>(null);
 
     function updateField<K extends keyof OrderPayload>(
         field: K,
@@ -129,7 +131,7 @@ function SubmitRequestForm() {
       }
     }
 
-    function submitForm() {
+    async function submitForm() {
       setIsSubmitting(true);
 
       const payload = prepareOrderPayload();
@@ -150,10 +152,67 @@ function SubmitRequestForm() {
         filesCount: payload.filesCount,
       });
 
-      setTimeout(() => {
+      const requestData = new FormData();
+
+      requestData.append("customerName", payload.customerName);
+      requestData.append("phone", payload.phone);
+      requestData.append("subjectFullName", payload.subjectFullName);
+      requestData.append("serviceGroup", payload.serviceGroup);
+      requestData.append("serviceId", payload.serviceId);
+      requestData.append("source", payload.source);
+      requestData.append("intakeDetails", payload.intakeDetails ?? "");
+      requestData.append("filesCount", String(selectedFiles.length));
+
+      requestData.append("urgency", payload.urgency ?? "");
+      requestData.append("apostille", payload.apostille ?? "");
+      requestData.append("translation", payload.translation ?? "");
+      requestData.append("extractType", payload.extractType ?? "");
+      requestData.append("purposeCode", payload.purposeCode ?? "");
+
+      selectedFiles.forEach((file) => {
+        requestData.append("files", file);
+      });
+
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        body: requestData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
         setIsSubmitting(false);
-        setIsSuccess(true);
-      }, 600);
+        setFieldErrors((prev) => ({
+          ...prev,
+          serviceGroup: result.error ?? "Не вдалося надіслати заявку. Спробуйте ще раз.",
+        }));
+        return;
+      }
+
+      setSubmittedOrderId(result.orderId ?? "");
+      setIsSubmitting(false);
+      setIsSuccess(true);
+
+      requestAnimationFrame(() => {
+        successRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+
+        successRef.current?.focus();
+      });
+
+      if (!response.ok) {
+        setIsSubmitting(false);
+        setFieldErrors((prev) => ({
+          ...prev,
+          serviceGroup: "Не вдалося надіслати заявку. Спробуйте ще раз.",
+        }));
+        return;
+      }
+
+      setIsSubmitting(false);
+      setIsSuccess(true);
     }
 
     const selectedServiceContent = formData.serviceGroup
@@ -215,10 +274,20 @@ function SubmitRequestForm() {
       return "Наприклад: країна подання, мета отримання документа або інші важливі дані";
     }
 
+    function getPublicOrderNumber(orderId: string) {
+      if (!orderId) return "";
+
+      return `LB-${orderId.slice(-6).toUpperCase()}`;
+    }
+
     if (isSuccess) {
       return (
         <main className="min-h-screen bg-[#f7f3ec] px-6 py-16 text-zinc-900 md:px-10 lg:px-16">
-          <div className="mx-auto max-w-2xl rounded-3xl bg-white p-8 text-center shadow-sm">
+          <div 
+            ref={successRef}
+            tabIndex={-1}
+            className="scroll-mt-28 mx-auto max-w-2xl rounded-3xl bg-white p-8 text-center shadow-sm"
+          >
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9b6a24]">
               Заявку отримано
             </p>
@@ -230,6 +299,13 @@ function SubmitRequestForm() {
             <p className="mt-6 text-zinc-600">
               Ми перевіримо деталі заявки, документи та підкажемо наступні кроки.
             </p>
+
+            {submittedOrderId && (
+              <div className="mt-6 rounded-2xl bg-[#f7f3ec] px-4 py-3 text-sm text-zinc-700">
+                Номер заявки:{" "}
+                <span className="font-medium">{getPublicOrderNumber(submittedOrderId)}</span>
+              </div>
+            )}
 
             <a
               href="/"
