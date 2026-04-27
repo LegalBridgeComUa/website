@@ -1,3 +1,13 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "LegalBridge — Міст між вами та Україною",
+  description:
+    "Допомагаємо українцям за кордоном дистанційно вирішувати документальні, адміністративні та юридичні питання в Україні.",
+  alternates: {
+    canonical: "/",
+  },
+};
 import { getActiveServices } from "@/lib/service-content";
 import { getIcon } from "@/lib/icons";
 
