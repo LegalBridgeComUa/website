@@ -7,14 +7,14 @@ export default function Header() {
     const [isOpen, setIsOpen] = useState(false);
     return (
         <header className="sticky top-0 z-50 border-b border-black/5 bg-[#f7f3ec]/90 backdrop-blur-xl">
-            <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 md:px-10 lg:px-16">
+            <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-1 md:px-10 lg:px-16">
                 <a className="flex items-center gap-3" href="/">
                 <Image
-                    src="/logo-main.png"
+                    src="/logo-lb.png"
                     alt="LegalBridge"
                     width={140}
                     height={50}
-                    className="h-auto w-28 md:w-36"
+                    className="h-auto w-24 md:w-32"
                 />
                 </a>
 
@@ -23,10 +23,10 @@ export default function Header() {
                     Послуги
                 </a>
                 <a href="/#process" className="transition hover:text-[#9b6a24]">
-                    Як працює
+                    Як це працює
                 </a>
                 <a href="/#about" className="transition hover:text-[#9b6a24]">
-                    Про нас
+                    Про LegalBridge
                 </a>
                 <a href="/#contacts" className="transition hover:text-[#9b6a24]">
                     Контакти
@@ -54,10 +54,10 @@ export default function Header() {
                         Послуги
                     </a>
                     <a href="/#process" onClick={() => setIsOpen(false)}>
-                        Як працює
+                        Як це працює
                     </a>
                     <a href="/#about" onClick={() => setIsOpen(false)}>
-                        Про нас
+                        Про LegalBridge
                     </a>
                     <a href="/#contacts" onClick={() => setIsOpen(false)}>
                         Контакти

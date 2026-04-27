@@ -16,45 +16,38 @@ export default function Home() {
 
         <div className="relative mx-auto grid min-h-[calc(100vh-80px)] max-w-7xl items-center gap-12 px-6 py-10 md:grid-cols-2 md:px-10 lg:px-16">
           <div>
-            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.25em] text-[#9b6a24]">
-              Міст між вами та Україною
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9b6a24]">
+              LegalBridge
             </p>
 
-            <h1 className="max-w-3xl text-4xl font-semibold tracking-tight md:text-6xl md:leading-tight">
-              Юридичні та документальні питання в Україні — без вашої
-              присутності
+            <h1 className="mt-4 text-4xl font-semibold tracking-tight md:text-6xl">
+              Міст між вами та Україною
             </h1>
 
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-700">
-              Допомагаємо українцям за кордоном вирішувати документальні,
-              адміністративні та юридичні питання дистанційно.
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-600">
+              Допомагаємо українцям за кордоном дистанційно вирішувати документальні,
+              адміністративні та юридичні питання в Україні — спокійно, зрозуміло й без
+              зайвої бюрократії.
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-3 text-sm font-medium text-zinc-700">
-              <span className="rounded-full bg-white/70 px-4 py-2 shadow-sm">
-                10+ років досвіду
-              </span>
-              <span className="rounded-full bg-white/70 px-4 py-2 shadow-sm">
-                20 000+ запитів
-              </span>
-              <span className="rounded-full bg-white/70 px-4 py-2 shadow-sm">
-                По всій Україні
-              </span>
-            </div>
-
             <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-              <a href="/submit-request"
-                className="rounded-full bg-zinc-900 px-7 py-4 text-center text-sm font-semibold text-white transition hover:bg-zinc-800">
+              <a
+                href="/submit-request"
+                className="inline-flex items-center justify-center rounded-full bg-zinc-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800"
+              >
                 Подати заявку
               </a>
-              <a className="rounded-full border border-zinc-300 bg-white/60 px-7 py-4 text-center text-sm font-semibold transition hover:bg-white">
+
+              <a
+                href="/services"
+                className="inline-flex items-center justify-center rounded-full border border-zinc-300 px-6 py-3 text-sm font-semibold text-zinc-900 transition hover:border-zinc-400"
+              >
                 Отримати консультацію
               </a>
             </div>
           </div>
 
           <div
-            id="process"
             className="rounded-[2rem] border border-white/60 bg-white/60 p-6 shadow-2xl backdrop-blur"
           >
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9b6a24]">
@@ -77,26 +70,66 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="mt-20">
+        <div className="mx-auto max-w-7xl px-6 md:px-10 lg:px-16">
+          <div className="max-w-3xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9b6a24]">
+              Чому нам довіряють
+            </p>
+
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
+              Досвід, який працює на ваш результат
+            </h2>
+
+            <p className="mt-6 text-lg leading-8 text-zinc-600">
+              Понад 10 років працюємо з документальними процесами в Україні та знаємо, як пройти їх спокійно, професійно й без помилок.  
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-4 md:grid-cols-2">
+            {[
+              "Понад 10 років практичного досвіду",
+              "Виросли завдяки рекомендаціям та довірі, а не рекламі",
+              "Пояснюємо складне просто і зрозуміло",
+              "Супроводжуємо до результату та несемо відповідальність",
+            ].map((item) => (
+              <div
+                key={item}
+                className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-zinc-200/70"
+              >
+                <p className="text-base font-medium text-zinc-900">{item}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section
         id="services"
         className="mx-auto max-w-7xl px-6 py-20 md:px-10 lg:px-16"
       >
-        <div className="max-w-2xl">
+        <div className="max-w-3xl">
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9b6a24]">
             Послуги
           </p>
-          <h2 className="mt-3 text-3xl font-semibold md:text-5xl">
-            Основні напрямки роботи
+
+          <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
+            З чим ми можемо допомогти
           </h2>
+
+          <p className="mt-6 text-lg leading-8 text-zinc-600">
+            Окремі документи, комплексні запити та супровід процесів в Україні — від приватних звернень до партнерської співпраці.
+          </p>
         </div>
 
         <div className="mt-10 flex snap-x gap-4 overflow-x-auto pb-4 md:grid md:grid-cols-3 md:overflow-visible">
           {getActiveServices().map((service) => {
             const Icon = getIcon(service.icon);
             return (
-              <div
+              <a
                 key={service.contentId}
-                className="min-w-[260px] snap-start rounded-3xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+                href={`/services/${service.contentId}`}
+                className="group min-w-[260px] snap-start rounded-3xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
               >
                 <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f7f3ec]">
                   <Icon className="h-6 w-6 text-[#9b6a24]" />
@@ -105,15 +138,65 @@ export default function Home() {
                 <p className="mt-4 text-sm leading-6 text-zinc-600">
                   {service.shortDescription}
                 </p>
-                <a
-                  href={`/services/${service.contentId}`}
-                  className="mt-6 inline-flex text-sm font-semibold text-[#9b6a24]"
-                >
-                  Детальніше →
-                </a>
-              </div>
+                <div className="mt-6 flex items-center gap-2 text-sm font-semibold text-[#9b6a24]">
+                  <span>Детальніше</span>
+                  <span className="transition group-hover:translate-x-1">→</span>
+                </div>
+              </a>
             );
           })}
+        </div>
+      </section>
+
+      <section id="process" className="scroll-mt-24 mx-auto max-w-7xl px-6 py-24 md:px-10 lg:px-16">
+        <div className="max-w-3xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9b6a24]">
+            Як це працює
+          </p>
+
+          <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
+            Простий і зрозумілий процес
+          </h2>
+
+          <p className="mt-6 text-lg leading-8 text-zinc-600">
+            Ми побудували процес так, щоб вам не доводилося розбиратися в деталях
+            самостійно. Пояснюємо, що потрібно, перевіряємо документи та супроводжуємо
+            запит до результату.
+          </p>
+        </div>
+
+        <div className="mt-12 grid gap-6 md:grid-cols-2">
+          {[
+            {
+              step: "01",
+              title: "Ви залишаєте заявку",
+              text: "Коротко описуєте запит і надсилаєте документи в зручному форматі.",
+            },
+            {
+              step: "02",
+              title: "Ми перевіряємо деталі",
+              text: "Уточнюємо, що саме потрібно, перевіряємо документи та пропонуємо оптимальний варіант.",
+            },
+            {
+              step: "03",
+              title: "Беремо процес у роботу",
+              text: "Подаємо запити, супроводжуємо оформлення та контролюємо проходження процесу в Україні.",
+            },
+            {
+              step: "04",
+              title: "Ви отримуєте готові документи",
+              text: "Узгоджуємо найзручніший спосіб доставки: по Україні, за кордон, через перевізників, поштою або з отриманням у Братиславі.",
+            },
+          ].map((item) => (
+            <div
+              key={item.step}
+              className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-zinc-200/70"
+            >
+              <p className="text-sm font-semibold text-[#9b6a24]">{item.step}</p>
+              <h3 className="mt-3 text-xl font-semibold">{item.title}</h3>
+              <p className="mt-4 text-sm leading-7 text-zinc-600">{item.text}</p>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -148,8 +231,11 @@ export default function Home() {
           тисяч успішно вирішених запитів. Тепер ми робимо цей сервіс доступним
           публічно.
         </p>
-        <a className="mt-10 inline-flex rounded-full bg-zinc-900 px-8 py-4 text-sm font-semibold text-white transition hover:bg-zinc-800">
-          Почати консультацію
+        <a
+          href="/submit-request"
+          className="mt-10 inline-flex rounded-full bg-zinc-900 px-8 py-4 text-sm font-semibold text-white transition hover:bg-zinc-800"
+        >
+          Подати заявку
         </a>
       </section>
     </main>

@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { getActiveServices, getServiceById } from "@/lib/service-content";
 import { resolveServiceId } from "@/lib/service-resolver";
 import type { OrderPayload } from "@/lib/order";
+import { CheckCircle2, FileText, Info, Trash2, Upload } from "lucide-react";
 
 type TextInputFieldProps = {
   label: string;
@@ -126,7 +127,7 @@ function SelectField({
         value={value}
         required={required}
         onChange={onChange}
-        className={`w-full rounded-2xl border px-4 py-3 outline-none transition focus:border-zinc-400 ${
+        className={`w-full cursor-pointer rounded-2xl border px-4 py-3 pr-10 outline-none transition focus:border-zinc-400 ${
           error ? "border-red-400" : "border-zinc-200"
         } ${className}`}
       >
@@ -145,13 +146,20 @@ function FileUploadBlock({
 }: FileUploadBlockProps) {
   return (
     <div data-error-field="files">
-      <label className="mb-2 block text-sm font-medium">Завантажити документи</label>
+      <label className="mb-2 flex items-center gap-2 text-sm font-medium">
+        <Upload className="h-4 w-4 text-[#9b6a24]" />
+        <span>Документи та фото</span>
+      </label>
       <input
         type="file"
         multiple
         onChange={onChange}
-        className="w-full rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-4 py-6 text-sm"
+        className="w-full cursor-pointer rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-4 py-6 text-sm"
       />
+      <p className="mt-2 text-sm leading-6 text-zinc-500">
+        Завантажте фото або скани документів у зручному форматі.
+      </p>
+
       {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
       {selectedFiles.length > 0 && (
         <div className="mt-4 rounded-2xl bg-[#f7f3ec] p-4">
@@ -164,13 +172,17 @@ function FileUploadBlock({
                 key={`${file.name}-${file.lastModified}`}
                 className="flex items-center justify-between gap-3 text-sm text-zinc-600"
               >
-                <span className="truncate">{file.name}</span>
+                <div className="flex min-w-0 items-center gap-2">
+                  <FileText className="h-4 w-4 shrink-0 text-[#9b6a24]" />
+                  <span className="truncate">{file.name}</span>
+                </div>
                 <button
                   type="button"
                   onClick={() => removeFile(file.name)}
-                  className="shrink-0 text-xs font-medium text-[#9b6a24] hover:underline"
+                  className="shrink-0 cursor-pointer text-[#9b6a24] transition hover:text-[#7a531c]"
+                  title="Видалити"
                 >
-                  Видалити
+                  <Trash2 className="h-4 w-4" />
                 </button>
               </li>
             ))}
@@ -192,7 +204,7 @@ function ServicePreviewBlock({
       </p>
       <div className="mt-4">
         <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#9b6a24]">
-          Що підготувати
+          Що знадобиться
         </p>
         <ul className="mt-3 space-y-2">
           {selectedServiceContent.requiredDocuments.slice(0, 5).map((item, index) => (
@@ -207,7 +219,7 @@ function ServicePreviewBlock({
         </ul>
       </div>
       <p className="mt-4 text-sm text-zinc-500">
-        Орієнтовний строк: {selectedServiceContent.turnaroundText}
+        Орієнтовний строк оформлення: {selectedServiceContent.turnaroundText}
       </p>
     </div>
   );
@@ -472,16 +484,20 @@ function SubmitRequestForm() {
             tabIndex={-1}
             className="scroll-mt-28 mx-auto max-w-2xl rounded-3xl bg-white p-8 text-center shadow-sm"
           >
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#f7f3ec] text-[#9b6a24]">
+              <CheckCircle2 className="h-7 w-7" />
+            </div>
+
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9b6a24]">
               Заявку отримано
             </p>
 
             <h1 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
-              Дякуємо! Ми зв’яжемося з вами найближчим часом.
+              Дякуємо! Ми вже взяли ваш запит у роботу.
             </h1>
 
             <p className="mt-6 text-zinc-600">
-              Ми перевіримо деталі заявки, документи та підкажемо наступні кроки.
+              Перевіримо деталі, документи та зв’яжемося з вами щодо наступних кроків.
             </p>
 
             {submittedOrderId && (
@@ -506,22 +522,22 @@ function SubmitRequestForm() {
     <main className="min-h-screen bg-[#f7f3ec] px-6 py-16 text-zinc-900 md:px-10 lg:px-16">
       <div className="mx-auto max-w-3xl">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9b6a24]">
-          Подати заявку
+          Заявка
         </p>
 
         <h1 className="mt-4 text-4xl font-semibold tracking-tight md:text-5xl">
-          Залиште заявку
+          Опишіть ваш запит
         </h1>
 
         <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-600">
-          Заповніть коротку форму — ми зв’яжемося з вами, перевіримо деталі та
-          підкажемо оптимальний формат вирішення вашого запиту.
+          Надішліть коротку інформацію та документи — ми перевіримо деталі,
+          підкажемо правильний формат оформлення і зв’яжемося з вами щодо наступних кроків.
         </p>
 
         <form
           noValidate
           onSubmit={handleSubmit}
-          className="mt-12 space-y-6 rounded-3xl bg-white p-6 shadow-sm md:p-8"
+          className="mt-12 space-y-7 rounded-3xl bg-white p-6 shadow-sm md:p-8"
         >
 
           <div className="grid gap-6 md:grid-cols-2">
@@ -550,6 +566,10 @@ function SubmitRequestForm() {
               dataErrorField="phone"
             />
           </div>
+          <p className="flex items-start gap-2 text-sm leading-6 text-zinc-500">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#9b6a24]" />
+            <span>Використовуємо ваші контакти лише для уточнення деталей заявки та зворотного зв’язку.</span>
+          </p>
 
           <SelectField
             label="Послуга"
@@ -582,7 +602,7 @@ function SubmitRequestForm() {
           <ServicePreviewBlock selectedServiceContent={selectedServiceContent} />
 
           {formData.serviceGroup === "ua_clearance" && (
-            <div className="space-y-6 rounded-3xl border border-[#d6a75c]/30 bg-[#f7f3ec] p-5">
+            <div className="space-y-6 rounded-3xl border border-[#d6a75c]/30 bg-[#f7f3ec] p-4 md:p-5">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[#9b6a24]">
                   Уточнення для довідки про несудимість
@@ -600,7 +620,7 @@ function SubmitRequestForm() {
                     onChange={(event) =>
                       updateField("urgency", event.target.value as "normal" | "urgent")
                     }
-                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                    className="w-full cursor-pointer rounded-2xl border border-zinc-200 bg-white px-4 py-3 pr-10 outline-none transition focus:border-zinc-400"
                   >
                     <option value="normal">Стандартна</option>
                     <option value="urgent">Термінова</option>
@@ -614,7 +634,7 @@ function SubmitRequestForm() {
                     onChange={(event) =>
                       updateField("apostille", event.target.value as "yes" | "no")
                     }
-                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                    className="w-full cursor-pointer rounded-2xl border border-zinc-200 bg-white px-4 py-3 pr-10 outline-none transition focus:border-zinc-400"
                   >
                     <option value="no">Без апостиля</option>
                     <option value="yes">З апостилем</option>
@@ -631,7 +651,7 @@ function SubmitRequestForm() {
                         event.target.value as "none" | "sk" | "cz"
                       )
                     }
-                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                    className="w-full cursor-pointer rounded-2xl border border-zinc-200 bg-white px-4 py-3 pr-10 outline-none transition focus:border-zinc-400"
                   >
                     <option value="none">Без перекладу</option>
                     <option value="sk">Переклад словацькою</option>
@@ -646,7 +666,7 @@ function SubmitRequestForm() {
                     onChange={(event) =>
                       updateField("extractType", event.target.value as "full" | "short")
                     }
-                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                    className="w-full cursor-pointer rounded-2xl border border-zinc-200 bg-white px-4 py-3 pr-10 outline-none transition focus:border-zinc-400"
                   >
                     <option value="full">Повний витяг</option>
                     <option value="short">Скорочений витяг</option>
@@ -659,7 +679,7 @@ function SubmitRequestForm() {
                 <select
                   value={formData.purposeCode ?? "Подання до установ іноземних держав"}
                   onChange={(event) => updateField("purposeCode", event.target.value)}
-                  className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                  className="w-full cursor-pointer rounded-2xl border border-zinc-200 bg-white px-4 py-3 pr-10 outline-none transition focus:border-zinc-400"
                 >
                   <option value="Подання до установ іноземних держав">
                     Подання до установ іноземних держав
@@ -708,7 +728,7 @@ function SubmitRequestForm() {
           />
 
           {["pl_clearance", "hu_clearance", "cz_clearance"].includes(formData.serviceGroup) && (
-            <div className="space-y-4 rounded-3xl border border-[#d6a75c]/30 bg-[#f7f3ec] p-5">
+            <div className="space-y-4 rounded-3xl border border-[#d6a75c]/30 bg-[#f7f3ec] p-4 md:p-5">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[#9b6a24]">
                   Параметри оформлення
@@ -725,7 +745,7 @@ function SubmitRequestForm() {
                   onChange={(event) =>
                     updateField("apostille", event.target.value as "yes" | "no")
                   }
-                  className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                  className="w-full cursor-pointer rounded-2xl border border-zinc-200 bg-white px-4 py-3 pr-10 outline-none transition focus:border-zinc-400"
                 >
                   <option value="no">Без апостиля</option>
                   <option value="yes">З апостилем</option>
@@ -735,7 +755,7 @@ function SubmitRequestForm() {
           )}
 
           {formData.serviceGroup === "driver_registry" && (
-            <div className="space-y-4 rounded-3xl border border-[#d6a75c]/30 bg-[#f7f3ec] p-5">
+            <div className="space-y-4 rounded-3xl border border-[#d6a75c]/30 bg-[#f7f3ec] p-4 md:p-5">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[#9b6a24]">
                   Параметри оформлення
@@ -753,7 +773,7 @@ function SubmitRequestForm() {
                     onChange={(event) =>
                       updateField("apostille", event.target.value as "yes" | "no")
                     }
-                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                    className="w-full cursor-pointer rounded-2xl border border-zinc-200 bg-white px-4 py-3 pr-10 outline-none transition focus:border-zinc-400"
                   >
                     <option value="no">Без апостиля</option>
                     <option value="yes">З апостилем</option>
@@ -767,7 +787,7 @@ function SubmitRequestForm() {
                     onChange={(event) =>
                       updateField("translation", event.target.value as "none" | "sk")
                     }
-                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                    className="w-full cursor-pointer rounded-2xl border border-zinc-200 bg-white px-4 py-3 pr-10 outline-none transition focus:border-zinc-400"
                   >
                     <option value="none">Без перекладу</option>
                     <option value="sk">Переклад словацькою</option>
@@ -778,7 +798,7 @@ function SubmitRequestForm() {
           )}
 
           {formData.serviceGroup === "civil_registry" && (
-            <div className="space-y-4 rounded-3xl border border-[#d6a75c]/30 bg-[#f7f3ec] p-5">
+            <div className="space-y-4 rounded-3xl border border-[#d6a75c]/30 bg-[#f7f3ec] p-4 md:p-5">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[#9b6a24]">
                   Параметри оформлення
@@ -799,7 +819,7 @@ function SubmitRequestForm() {
                       event.target.value as "duplicate" | "extract" | "apostille_only"
                     )
                   }
-                  className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                  className="w-full cursor-pointer rounded-2xl border border-zinc-200 bg-white px-4 py-3 pr-10 outline-none transition focus:border-zinc-400"
                 >
                   <option value="duplicate">Дублікат свідоцтва</option>
                   <option value="extract">Витяг з ДРАЦС</option>
@@ -815,7 +835,7 @@ function SubmitRequestForm() {
                     onChange={(event) =>
                       updateField("apostille", event.target.value as "yes" | "no")
                     }
-                    className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                    className="w-full cursor-pointer rounded-2xl border border-zinc-200 bg-white px-4 py-3 pr-10 outline-none transition focus:border-zinc-400"
                   >
                     <option value="yes">З апостилем</option>
                     <option value="no">Без апостиля</option>
@@ -830,7 +850,7 @@ function SubmitRequestForm() {
                   onChange={(event) =>
                     updateField("translation", event.target.value as "none" | "sk")
                   }
-                  className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                  className="w-full cursor-pointer rounded-2xl border border-zinc-200 bg-white px-4 py-3 pr-10 outline-none transition focus:border-zinc-400"
                 >
                   <option value="none">Без перекладу</option>
                   <option value="sk">Переклад словацькою</option>
@@ -840,7 +860,7 @@ function SubmitRequestForm() {
           )}
 
           {formData.serviceGroup === "education_apostille" && (
-            <div className="space-y-4 rounded-3xl border border-[#d6a75c]/30 bg-[#f7f3ec] p-5">
+            <div className="space-y-4 rounded-3xl border border-[#d6a75c]/30 bg-[#f7f3ec] p-4 md:p-5">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[#9b6a24]">
                   Параметри оформлення
@@ -863,7 +883,7 @@ function SubmitRequestForm() {
                         | "institution_certificate"
                     )
                   }
-                  className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                  className="w-full cursor-pointer rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
                 >
                   <option value="standard">Апостиль освітнього документа — стандартно</option>
                   <option value="urgent">Апостиль освітнього документа — терміново</option>
@@ -876,7 +896,7 @@ function SubmitRequestForm() {
           )}
 
           {formData.serviceGroup === "translation" && (
-            <div className="space-y-4 rounded-3xl border border-[#d6a75c]/30 bg-[#f7f3ec] p-5">
+            <div className="space-y-4 rounded-3xl border border-[#d6a75c]/30 bg-[#f7f3ec] p-4 md:p-5">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[#9b6a24]">
                   Параметри перекладу
@@ -899,7 +919,7 @@ function SubmitRequestForm() {
                         | "clearance_cz"
                     )
                   }
-                  className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition focus:border-zinc-400"
+                  className="w-full cursor-pointer rounded-2xl border border-zinc-200 bg-white px-4 py-3 pr-10 outline-none transition focus:border-zinc-400"
                 >
                   <option value="clearance_sk">Переклад довідки словацькою</option>
                   <option value="certificate_sk">Переклад свідоцтва словацькою</option>
@@ -924,10 +944,15 @@ function SubmitRequestForm() {
               removeFile={removeFile}
             />
 
+            <p className="mt-3 flex items-start gap-2 text-sm leading-6 text-zinc-500">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#9b6a24]" />
+              <span>Файли обробляються конфіденційно та використовуються лише для вашого запиту.</span>
+            </p>
+
             <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full rounded-full bg-zinc-900 px-6 py-4 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-400"
+                className="w-full cursor-pointer rounded-full bg-zinc-900 px-6 py-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-zinc-800 hover:shadow-md disabled:cursor-not-allowed disabled:bg-zinc-400 disabled:hover:translate-y-0 disabled:hover:shadow-sm"
                 >
                 {isSubmitting ? "Надсилаємо..." : "Надіслати заявку"}
             </button>

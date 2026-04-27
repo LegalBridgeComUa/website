@@ -6,49 +6,79 @@ export default function Footer() {
       id="contacts"
       className="border-t border-black/5 bg-white px-6 py-12 md:px-10 lg:px-16"
     >
-      <div className="mx-auto grid max-w-7xl gap-10 md:grid-cols-3">
-        <div>
-          <Image
-            src="/logo-main.png"
-            alt="LegalBridge"
-            width={160}
-            height={60}
-            className="h-auto w-32"
-          />
-          <p className="mt-4 max-w-sm text-sm leading-6 text-zinc-600">
-            LegalBridge — сервіс представництва в Україні для українців, які перебувають за кордоном, з питань документів, права та дистанційного супроводу.
-          </p>
-        </div>
+      <div className="mx-auto max-w-7xl">
+        <div className="grid gap-10 md:grid-cols-3">
+          <div>
+            <Image
+              src="/logo-lb.png"
+              alt="LegalBridge"
+              width={160}
+              height={60}
+              className="mx-auto h-auto w-80 md:mx-0"
+            />
 
-        <div>
-          <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-zinc-500">
-            Контакти
-          </h3>
-          <div className="mt-4 space-y-2 text-sm text-zinc-700">
-            <p>Ужгород, Україна</p>
-            <p>admin@legalbridge.com.ua</p>
-            <p>Telegram / Viber / WhatsApp</p>
+            <p className="mt-4 text-sm font-medium text-zinc-900">
+              Міст між вами та Україною
+            </p>
+
+            <p className="mt-3 max-w-sm text-sm leading-6 text-zinc-600">
+              Допомагаємо дистанційно вирішувати документальні,
+              адміністративні та юридичні питання в Україні — спокійно,
+              зрозуміло й професійно.
+            </p>
           </div>
-        </div>
 
-        <div>
-          <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-zinc-500">
-            Навігація
-          </h3>
-          <div className="mt-4 space-y-2 text-sm text-zinc-700">
-            <a href="/services" className="block hover:text-[#9b6a24]">
-              Послуги
-            </a>
-            <a href="/#about" className="block hover:text-[#9b6a24]">
-              Про нас
-            </a>
-            <a href="/#contacts" className="block hover:text-[#9b6a24]">
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-zinc-500">
+              Навігація
+            </h3>
+
+            <div className="mt-4 space-y-2 text-sm text-zinc-700">
+              <a href="/services" className="block transition hover:text-[#9b6a24]">
+                Послуги
+              </a>
+              <a href="/#process" className="block transition hover:text-[#9b6a24]">
+                Як це працює
+              </a>
+              <a href="/#about" className="block transition hover:text-[#9b6a24]">
+                Про LegalBridge
+              </a>
+              <a
+                href="/submit-request"
+                className="block transition hover:text-[#9b6a24]"
+              >
+                Подати заявку
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-zinc-500">
               Контакти
-            </a>
-            <a href="/submit-request" className="block hover:text-[#9b6a24]">
-              Подати заявку
-            </a>
+            </h3>
+
+            <div className="mt-4 space-y-2 text-sm text-zinc-700">
+              <p>Ужгород, Україна</p>
+              <a
+                href="mailto:admin@legalbridge.com.ua"
+                className="block transition hover:text-[#9b6a24]"
+              >
+                admin@legalbridge.com.ua
+              </a>
+              <a
+                href="tel:+380995057733"
+                className="block transition hover:text-[#9b6a24]"
+              >
+                +380 99 505 77 33
+              </a>
+
+              <p>Telegram · Viber · WhatsApp</p>
+            </div>
           </div>
+        </div>
+
+        <div className="mt-10 border-t border-black/5 pt-6 text-sm text-zinc-500">
+          © {new Date().getFullYear()} LegalBridge. Усі права захищені.
         </div>
       </div>
     </footer>
