@@ -7,12 +7,210 @@ import { getActiveServices, getServiceById } from "@/lib/service-content";
 import { resolveServiceId } from "@/lib/service-resolver";
 import type { OrderPayload } from "@/lib/order";
 
+type TextInputFieldProps = {
+  label: string;
+  value: string;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder: string;
+  required?: boolean;
+  error?: string;
+  type?: string;
+  dataErrorField?: string;
+};
+
+type TextareaFieldProps = {
+  label: string;
+  value: string;
+  onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  placeholder: string;
+  rows?: number;
+  helperText?: string;
+};
+
+type SelectFieldProps = {
+  label: string;
+  value: string;
+  onChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  required?: boolean;
+  children: React.ReactNode;
+  error?: string;
+  className?: string;
+  dataErrorField?: string;
+};
+
+type FileUploadBlockProps = {
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  error?: string;
+  selectedFiles: File[];
+  removeFile: (fileName: string) => void;
+};
+
+type ServicePreviewBlockProps = {
+  selectedServiceContent: ReturnType<typeof getServiceById> | null;
+};
+
 interface FieldErrors {
   customerName?: string;
   phone?: string;
   serviceGroup?: string;
   subjectFullName?: string;
   files?: string;
+}
+
+// Local helper components
+function TextInputField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  required = false,
+  error,
+  type = "text",
+  dataErrorField,
+}: TextInputFieldProps) {
+  return (
+    <div data-error-field={dataErrorField}>
+      <label className="mb-2 block text-sm font-medium">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        required={required}
+        className={`w-full rounded-2xl border px-4 py-3 outline-none transition focus:border-zinc-400 ${
+          error ? "border-red-400" : "border-zinc-200"
+        }`}
+      />
+      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+    </div>
+  );
+}
+
+function TextareaField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  rows = 5,
+  helperText,
+}: TextareaFieldProps) {
+  return (
+    <div>
+      <label className="mb-2 block text-sm font-medium">{label}</label>
+      <textarea
+        rows={rows}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="w-full rounded-2xl border border-zinc-200 px-4 py-3 outline-none transition focus:border-zinc-400"
+      />
+      {helperText && <p className="mt-2 text-xs leading-5 text-zinc-500">{helperText}</p>}
+    </div>
+  );
+}
+
+function SelectField({
+  label,
+  value,
+  onChange,
+  required = false,
+  children,
+  error,
+  className = "",
+  dataErrorField,
+}: SelectFieldProps) {
+  return (
+    <div data-error-field={dataErrorField}>
+      <label className="mb-2 block text-sm font-medium">{label}</label>
+      <select
+        value={value}
+        required={required}
+        onChange={onChange}
+        className={`w-full rounded-2xl border px-4 py-3 outline-none transition focus:border-zinc-400 ${
+          error ? "border-red-400" : "border-zinc-200"
+        } ${className}`}
+      >
+        {children}
+      </select>
+      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+    </div>
+  );
+}
+
+function FileUploadBlock({
+  onChange,
+  error,
+  selectedFiles,
+  removeFile,
+}: FileUploadBlockProps) {
+  return (
+    <div data-error-field="files">
+      <label className="mb-2 block text-sm font-medium">Завантажити документи</label>
+      <input
+        type="file"
+        multiple
+        onChange={onChange}
+        className="w-full rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-4 py-6 text-sm"
+      />
+      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {selectedFiles.length > 0 && (
+        <div className="mt-4 rounded-2xl bg-[#f7f3ec] p-4">
+          <p className="text-sm font-medium text-zinc-900">
+            Обрано файлів: {selectedFiles.length}
+          </p>
+          <ul className="mt-3 space-y-2">
+            {selectedFiles.map((file) => (
+              <li
+                key={`${file.name}-${file.lastModified}`}
+                className="flex items-center justify-between gap-3 text-sm text-zinc-600"
+              >
+                <span className="truncate">{file.name}</span>
+                <button
+                  type="button"
+                  onClick={() => removeFile(file.name)}
+                  className="shrink-0 text-xs font-medium text-[#9b6a24] hover:underline"
+                >
+                  Видалити
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ServicePreviewBlock({
+    selectedServiceContent,
+  }: ServicePreviewBlockProps) {
+  if (!selectedServiceContent) return null;
+  return (
+    <div className="mt-4 rounded-2xl bg-[#f7f3ec] p-4">
+      <p className="text-sm font-medium text-zinc-900">
+        {selectedServiceContent.shortDescription}
+      </p>
+      <div className="mt-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#9b6a24]">
+          Що підготувати
+        </p>
+        <ul className="mt-3 space-y-2">
+          {selectedServiceContent.requiredDocuments.slice(0, 5).map((item, index) => (
+            <li
+              key={index}
+              className="flex items-start gap-2 text-sm text-zinc-600"
+            >
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#d6a75c]" />
+              <span className="whitespace-pre-line">{item}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <p className="mt-4 text-sm text-zinc-500">
+        Орієнтовний строк: {selectedServiceContent.turnaroundText}
+      </p>
+    </div>
+  );
 }
 
 function SubmitRequestForm() {
@@ -201,18 +399,6 @@ function SubmitRequestForm() {
 
         successRef.current?.focus();
       });
-
-      if (!response.ok) {
-        setIsSubmitting(false);
-        setFieldErrors((prev) => ({
-          ...prev,
-          serviceGroup: "Не вдалося надіслати заявку. Спробуйте ще раз.",
-        }));
-        return;
-      }
-
-      setIsSubmitting(false);
-      setIsSuccess(true);
     }
 
     const selectedServiceContent = formData.serviceGroup
@@ -235,8 +421,6 @@ function SubmitRequestForm() {
     function removeFile(fileName: string) {
       setSelectedFiles((prev) => prev.filter((file) => file.name !== fileName));
     }
-
-    // ...existing code...
 
     function getIntakeDetailsPlaceholder() {
       if (formData.serviceGroup === "ua_clearance") {
@@ -339,114 +523,63 @@ function SubmitRequestForm() {
           onSubmit={handleSubmit}
           className="mt-12 space-y-6 rounded-3xl bg-white p-6 shadow-sm md:p-8"
         >
-          <div className="grid gap-6 md:grid-cols-2" data-error-field="customerName">
-            <div>
-              <label className="mb-2 block text-sm font-medium">Ім’я</label>
-              <input
-                type="text"
-                value={formData.customerName}
-                onChange={(event) => updateField("customerName", event.target.value)}
-                placeholder="Ваше ім’я"
-                required
-                className={`w-full rounded-2xl border px-4 py-3 outline-none transition focus:border-zinc-400 ${
-                  fieldErrors.customerName ? "border-red-400" : "border-zinc-200"
-                }`}
-              />
-              {fieldErrors.customerName && (
-                <p className="mt-1 text-sm text-red-600">{fieldErrors.customerName}</p>
-              )}
-            </div>
 
-            <div data-error-field="phone">
-              <label className="mb-2 block text-sm font-medium">Телефон</label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(event) =>
-                  updateField(
-                    "phone",
-                    event.target.value.replace(/[^\d+\-\s()]/g, "")
-                  )
-                }
-                placeholder="+421... або +380..."
-                required
-                className={`w-full rounded-2xl border px-4 py-3 outline-none transition focus:border-zinc-400 ${
-                  fieldErrors.phone ? "border-red-400" : "border-zinc-200"
-                }`}
-              />
-              {fieldErrors.phone && (
-                <p className="mt-1 text-sm text-red-600">{fieldErrors.phone}</p>
-              )}
-            </div>
-          </div>
-
-          <div data-error-field="serviceGroup">
-            <label className="mb-2 block text-sm font-medium">Послуга</label>
-
-            <select
-              value={formData.serviceGroup}
+          <div className="grid gap-6 md:grid-cols-2">
+            <TextInputField
+              label="Ім’я"
+              value={formData.customerName}
+              onChange={(event) => updateField("customerName", event.target.value)}
+              placeholder="Ваше ім’я"
               required
-              onChange={(event) => {
-                const value = event.target.value;
-
-                updateField("serviceGroup", value);
-
-                if (value === "driver_registry") {
-                  setFormData((prev) => ({
-                    ...prev,
-                    serviceGroup: value,
-                    apostille: "no",
-                    translation: "none",
-                  }));
-                }
-              }}
-              className={`w-full rounded-2xl border px-4 py-3 outline-none transition focus:border-zinc-400 ${
-                fieldErrors.serviceGroup ? "border-red-400" : "border-zinc-200"
-              }`}
-            >
-              <option value="">Оберіть послугу</option>
-              {getActiveServices().map((service) => (
-                <option key={service.contentId} value={service.contentId}>
-                  {service.title}
-                </option>
-              ))}
-            </select>
-            {fieldErrors.serviceGroup && (
-              <p className="mt-1 text-sm text-red-600">{fieldErrors.serviceGroup}</p>
-            )}
-
-            {selectedServiceContent && (
-              <div className="mt-4 rounded-2xl bg-[#f7f3ec] p-4">
-                <p className="text-sm font-medium text-zinc-900">
-                  {selectedServiceContent.shortDescription}
-                </p>
-
-                <div className="mt-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#9b6a24]">
-                    Що підготувати
-                  </p>
-
-                  <ul className="mt-3 space-y-2">
-                    {selectedServiceContent.requiredDocuments
-                      .slice(0, 5)
-                      .map((item, index) => (
-                        <li
-                          key={index}
-                          className="flex items-start gap-2 text-sm text-zinc-600"
-                        >
-                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#d6a75c]" />
-                          <span className="whitespace-pre-line">{item}</span>
-                        </li>
-                      ))}
-                  </ul>
-                </div>
-
-                <p className="mt-4 text-sm text-zinc-500">
-                  Орієнтовний строк: {selectedServiceContent.turnaroundText}
-                </p>
-              </div>
-            )}
+              error={fieldErrors.customerName}
+              dataErrorField="customerName"
+            />
+            <TextInputField
+              label="Телефон"
+              value={formData.phone}
+              onChange={(event) =>
+                updateField(
+                  "phone",
+                  event.target.value.replace(/[^\d+\-\s()]/g, "")
+                )
+              }
+              placeholder="+421... або +380..."
+              required
+              error={fieldErrors.phone}
+              type="tel"
+              dataErrorField="phone"
+            />
           </div>
+
+          <SelectField
+            label="Послуга"
+            value={formData.serviceGroup}
+            required
+            onChange={(event) => {
+              const value = event.target.value;
+
+              setFormData((prev) => ({
+                ...prev,
+                serviceGroup: value,
+                apostille: value === "driver_registry" ? "no" : "yes",
+                translation: "none",
+              }));
+
+              if (fieldErrors.serviceGroup) {
+                setFieldErrors((prev) => ({ ...prev, serviceGroup: undefined }));
+              }
+            }}
+            error={fieldErrors.serviceGroup}
+            dataErrorField="serviceGroup"
+          >
+            <option value="">Оберіть послугу</option>
+            {getActiveServices().map((service) => (
+              <option key={service.contentId} value={service.contentId}>
+                {service.title}
+              </option>
+            ))}
+          </SelectField>
+          <ServicePreviewBlock selectedServiceContent={selectedServiceContent} />
 
           {formData.serviceGroup === "ua_clearance" && (
             <div className="space-y-6 rounded-3xl border border-[#d6a75c]/30 bg-[#f7f3ec] p-5">
@@ -564,24 +697,15 @@ function SubmitRequestForm() {
             </div>
           )}
 
-          <div data-error-field="subjectFullName">
-            <label className="mb-2 block text-sm font-medium">
-              Прізвище та ім’я (для документа)
-            </label>
-            <input
-                type="text"
-                required
-                value={formData.subjectFullName}
-                onChange={(event) => updateField("subjectFullName", event.target.value)}
-                placeholder="Прізвище та ім’я особи"
-                className={`w-full rounded-2xl border px-4 py-3 outline-none transition focus:border-zinc-400 ${
-                  fieldErrors.subjectFullName ? "border-red-400" : "border-zinc-200"
-                }`}
-                />
-            {fieldErrors.subjectFullName && (
-                <p className="mt-1 text-sm text-red-600">{fieldErrors.subjectFullName}</p>
-            )}
-          </div>
+          <TextInputField
+            label="Прізвище та ім’я (для документа)"
+            value={formData.subjectFullName}
+            onChange={(event) => updateField("subjectFullName", event.target.value)}
+            placeholder="Прізвище та ім’я особи"
+            required
+            error={fieldErrors.subjectFullName}
+            dataErrorField="subjectFullName"
+          />
 
           {["pl_clearance", "hu_clearance", "cz_clearance"].includes(formData.serviceGroup) && (
             <div className="space-y-4 rounded-3xl border border-[#d6a75c]/30 bg-[#f7f3ec] p-5">
@@ -785,64 +909,20 @@ function SubmitRequestForm() {
             </div>
           )}
 
-          <div>
-            <label className="mb-2 block text-sm font-medium">
-              Додаткова інформація
-            </label>
-            <textarea
-              rows={5}
+          <TextareaField
+              label="Додаткова інформація"
               value={formData.intakeDetails ?? ""}
               onChange={(event) => updateField("intakeDetails", event.target.value)}
               placeholder={getIntakeDetailsPlaceholder()}
-              className="w-full rounded-2xl border border-zinc-200 px-4 py-3 outline-none transition focus:border-zinc-400"
+              helperText="Це поле допомагає нам швидше перевірити заявку та зрозуміти вашу ситуацію."
             />
-            <p className="mt-2 text-xs leading-5 text-zinc-500">
-              Це поле допомагає нам швидше перевірити заявку та зрозуміти вашу ситуацію.
-            </p>
-          </div>
 
-          <div data-error-field="files">
-            <label className="mb-2 block text-sm font-medium">
-              Завантажити документи
-            </label>
-
-            <input
-              type="file"
-              multiple
+            <FileUploadBlock
               onChange={handleFilesChange}
-              className="w-full rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-4 py-6 text-sm"
+              error={fieldErrors.files}
+              selectedFiles={selectedFiles}
+              removeFile={removeFile}
             />
-            {fieldErrors.files && (
-              <p className="mt-1 text-sm text-red-600">{fieldErrors.files}</p>
-            )}
-
-            {selectedFiles.length > 0 && (
-              <div className="mt-4 rounded-2xl bg-[#f7f3ec] p-4">
-                <p className="text-sm font-medium text-zinc-900">
-                  Обрано файлів: {selectedFiles.length}
-                </p>
-
-                <ul className="mt-3 space-y-2">
-                  {selectedFiles.map((file) => (
-                    <li
-                      key={`${file.name}-${file.lastModified}`}
-                      className="flex items-center justify-between gap-3 text-sm text-zinc-600"
-                    >
-                      <span className="truncate">{file.name}</span>
-
-                      <button
-                        type="button"
-                        onClick={() => removeFile(file.name)}
-                        className="shrink-0 text-xs font-medium text-[#9b6a24] hover:underline"
-                      >
-                        Видалити
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
 
             <button
                 type="submit"
