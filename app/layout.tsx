@@ -1,8 +1,13 @@
+
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
+import Script from "next/script";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { GA_ID, pageview } from "@/lib/gtag";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -37,6 +42,20 @@ export const metadata: Metadata = {
   },
 };
 
+
+function Analytics() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (!GA_ID) return;
+    const url = pathname + (searchParams?.toString() ? `?${searchParams}` : "");
+    pageview(url);
+  }, [pathname, searchParams]);
+
+  return null;
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -45,6 +64,26 @@ export default function RootLayout({
   return (
     <html lang="uk">
       <body className={geist.className}>
+        {GA_ID && (
+          <>
+            <Script
+              id="ga4-script"
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga4-inline" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_ID}', {
+                  page_path: window.location.pathname,
+                });
+              `}
+            </Script>
+            <Analytics />
+          </>
+        )}
         <Header />
         {children}
         <Footer />

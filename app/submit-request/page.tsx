@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, Suspense, useRef } from "react";
+import { useState, Suspense, useRef, useEffect } from "react";
+import { event as gaEvent } from "@/lib/gtag";
 import { useSearchParams } from "next/navigation";
 
 import { getActiveServices, getServiceById } from "@/lib/service-content";
@@ -255,47 +256,58 @@ function SubmitRequestForm() {
     const successRef = useRef<HTMLDivElement | null>(null);
 
     function updateField<K extends keyof OrderPayload>(
-        field: K,
-        value: OrderPayload[K]
-        ) {
-        setFormData((prev) => ({
-            ...prev,
-            [field]: value,
-        }));
-        // Clear error when user starts typing
-        if (fieldErrors[field as keyof FieldErrors]) {
-            setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
+        // Fire GA event on success (only once)
+        useEffect(() => {
+          if (isSuccess) {
+            gaEvent("generate_lead", {
+              event_category: "form",
+              event_label: "submit_request",
+              value: 1,
+            });
+          }
+        }, [isSuccess]);
+
+        if (isSuccess) {
+          return (
+            <main className="min-h-screen bg-[#f7f3ec] px-6 py-16 text-zinc-900 md:px-10 lg:px-16">
+              <div 
+                ref={successRef}
+                tabIndex={-1}
+                className="scroll-mt-28 mx-auto max-w-2xl rounded-3xl bg-white p-8 text-center shadow-sm"
+              >
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#f7f3ec] text-[#9b6a75c]">
+                  <CheckCircle2 className="h-7 w-7" />
+                </div>
+
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9b6a24]">
+                  Заявку отримано
+                </p>
+
+                <h1 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
+                  Дякуємо! Ми вже взяли ваш запит у роботу.
+                </h1>
+
+                <p className="mt-6 text-zinc-600">
+                  Перевіримо деталі, документи та зв’яжемося з вами щодо наступних кроків.
+                </p>
+
+                {submittedOrderId && (
+                  <div className="mt-6 rounded-2xl bg-[#f7f3ec] px-4 py-3 text-sm text-zinc-700">
+                    Номер заявки:{" "}
+                    <span className="font-medium">{getPublicOrderNumber(submittedOrderId)}</span>
+                  </div>
+                )}
+
+                <a
+                  href="/"
+                  className="mt-8 inline-flex rounded-full bg-zinc-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800"
+                >
+                  На головну
+                </a>
+              </div>
+            </main>
+          );
         }
-    }
-
-    function isValidPhone(value: string) {
-      const normalized = value.replace(/[^\d+]/g, "");
-      const digits = normalized.replace(/\D/g, "");
-
-      return digits.length >= 9 && digits.length <= 15;
-    }
-
-    function validateForm(): { errors: FieldErrors; firstErrorField: keyof FieldErrors | null } {
-      const errors: FieldErrors = {};
-
-      if (!formData.customerName.trim()) {
-        errors.customerName = "Вкажіть ім’я.";
-      }
-
-      if (!formData.phone.trim()) {
-        errors.phone = "Вкажіть телефон.";
-      } else if (!isValidPhone(formData.phone)) {
-        errors.phone = "Вкажіть коректний номер телефону.";
-      }
-
-      if (!formData.serviceGroup) {
-        errors.serviceGroup = "Оберіть послугу.";
-      }
-
-      if (!formData.subjectFullName.trim()) {
-        errors.subjectFullName = "Вкажіть прізвище та ім’я особи, для якої оформлюється документ.";
-      }
-
       if (selectedFiles.length === 0) {
         errors.files = "Додайте хоча б один файл або фото документа.";
       }
