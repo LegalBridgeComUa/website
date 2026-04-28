@@ -60,10 +60,10 @@ export default function Footer() {
             <div className="mt-4 space-y-2 text-sm text-zinc-700">
               <p>Ужгород, Україна</p>
               <a
-                href="mailto:admin@legalbridge.com.ua"
+                href="mailto:info@legalbridge.com.ua"
                 className="block transition hover:text-[#9b6a24]"
               >
-                admin@legalbridge.com.ua
+                info@legalbridge.com.ua
               </a>
               <a
                 href="tel:+380995057733"
